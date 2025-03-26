@@ -1,11 +1,11 @@
 import random
 import datetime
-from fastapi import FastAPI
+import azure.functions as func
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
+from mangum import Mangum  # Adapter to integrate FastAPI with Azure Functions
 
 app = FastAPI()
-
-# Initial temperature state
-station_temperatures = {}
 
 # Predefined list of weather stations
 stations = [
@@ -14,11 +14,19 @@ stations = [
     {"id": 3, "name": "Station Gamma"}
 ]
 
-def generate_temperatures(station_id):
-    now = datetime.datetime.utcnow()
-    if station_id not in station_temperatures:
-        station_temperatures[station_id] = [(now, 20.0)]
+# Convert station list to a set for fast lookup
+station_ids = {station["id"] for station in stations}
 
+# Initial temperature state
+station_temperatures = {}
+for station in stations:
+    station_temperatures[station["id"]] = [(datetime.datetime.utcnow(), 20.0)]
+
+def generate_temperatures(station_id):
+    if station_id not in station_ids:
+        raise HTTPException(status_code=404, detail=f"Station ID {station_id} not found.")
+
+    now = datetime.datetime.utcnow()
     last_timestamp, last_temp = station_temperatures[station_id][-1]
     while last_timestamp + datetime.timedelta(minutes=5) <= now:
         last_timestamp += datetime.timedelta(minutes=5)
@@ -47,3 +55,11 @@ def temperature_last_24_hours(station_id: int):
     cutoff = datetime.datetime.utcnow() - datetime.timedelta(hours=24)
     last_24h_temps = [(t, temp) for t, temp in temperatures if t >= cutoff]
     return {"temperatures": [{"timestamp": t.isoformat(), "temperature": temp} for t, temp in last_24h_temps]}
+
+
+# Azure Function Adapter
+handler = Mangum(app)
+
+def main(req: func.HttpRequest) -> func.HttpResponse:
+    """Azure Function entry point"""
+    return handler(req)

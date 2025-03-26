@@ -5,6 +5,11 @@ name = "pypi"
 
 [packages]
 fastapi = {extras = ["standard"], version = "*"}
+mangum = "*"
+azure-functions = "*"
+
+[scripts]
+function = "uvicorn function_app:app --reload"
 
 [dev-packages]
 
