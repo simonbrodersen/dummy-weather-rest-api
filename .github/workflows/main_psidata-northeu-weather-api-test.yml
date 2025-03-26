@@ -11,8 +11,10 @@ on:
   workflow_dispatch:
 
 env:
+  AZURE_FUNCTIONAPP_NAME: 'psidata-northeu-weather-api-test' # set this to your function app name on Azure
   AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
   PYTHON_VERSION: '3.11' # set this to the python version to use (supports 3.6, 3.7, 3.8)
+  PIPENV_VENV_IN_PROJECT: true
 
 jobs:
   build:
@@ -24,7 +26,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Python version
+      - name: Setup Python ${{ env.PYTHON_VERSION }} Environment
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -36,7 +38,7 @@ jobs:
 
       - name: Install dependencies with Pipenv
         run: |
-          pipenv install --deploy --ignore-pipfile  # Use --deploy for production safety
+          pipenv install --deploy --ignore-pipfile
 
       - name: Zip artifact for deployment
         run: zip release.zip ./* -r
@@ -76,6 +78,7 @@ jobs:
         uses: Azure/functions-action@v1
         id: deploy-to-function
         with:
-          app-name: 'psidata-northeu-weather-api-test'
-          slot-name: 'Production'
+          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+          scm-do-build-during-deployment: true
+          enable-oryx-build: true
