@@ -1,6 +1,5 @@
 import random
 import datetime
-import azure.functions as func
 
 from fastapi import FastAPI, HTTPException
 
