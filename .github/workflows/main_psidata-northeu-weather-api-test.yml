@@ -14,7 +14,6 @@ env:
   AZURE_FUNCTIONAPP_NAME: 'psidata-northeu-weather-api-test' # set this to your function app name on Azure
   AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
   PYTHON_VERSION: '3.11' # set this to the python version to use (supports 3.6, 3.7, 3.8)
-  PIPENV_VENV_IN_PROJECT: true
 
 jobs:
   build:
@@ -40,16 +39,11 @@ jobs:
         run: |
           pipenv install --deploy --ignore-pipfile
 
-      - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
-
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          path: |
-            release.zip
-            !venv/
+          path: ./
 
   deploy:
     runs-on: ubuntu-latest
@@ -63,9 +57,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: python-app
-
-      - name: Unzip artifact for deployment
-        run: unzip release.zip
 
       - name: Login to Azure
         uses: azure/login@v2
