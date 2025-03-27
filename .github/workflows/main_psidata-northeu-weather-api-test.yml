@@ -38,7 +38,7 @@ jobs:
 
       - name: Install dependencies with Pipenv
         run: |
-          pipenv install --deploy --ignore-pipfile
+          pipenv requirements > requirements.txt
 
       - name: Zip artifact for deployment
         run: zip release.zip ./* -r
@@ -76,7 +76,6 @@ jobs:
 
       - name: 'Deploy to Azure Functions'
         uses: Azure/functions-action@v1
-        id: deploy-to-function
         with:
           app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
